@@ -1,0 +1,221 @@
+# آزمایشگاه جلسه‌ی ۱ — اولین مدل Churn
+
+در این آزمایشگاه یک پروژه‌ی ML مرتب می‌سازید، داده‌ی مصنوعی تولید می‌کنید و اولین مدل (خط پایه) را آموزش می‌دهید.
+
+زمان تقریبی: ۳۰ تا ۴۵ دقیقه.
+
+## نتیجه‌ی نهایی
+
+در پایان باید این خروجی را ببینید:
+
+```
+{'roc_auc': 0.802, 'f1': 0.5969}
+```
+
+## فایل‌های این پوشه
+
+| فایل | مقصد در پروژه | کار |
+|---|---|---|
+| `make_dataset.py` | `scripts/` | ساخت داده‌ی مصنوعی مشتری‌ها |
+| `train.py` | `src/churn/` | آموزش و ارزیابی مدل |
+| `params.yaml` | `configs/` | تنظیمات (hyperparameterها) |
+| `Makefile` | ریشه‌ی پروژه | دستورهای کوتاه `make data` و `make train` |
+| `gitignore` | ریشه‌ی پروژه، با نام `.gitignore` | فایل‌هایی که نباید در Git بروند |
+
+## پیش‌نیازها
+
+- `git`
+- `make`
+- [`uv`](https://docs.astral.sh/uv/) (پایتون ۳٫۱۲ را خودش نصب می‌کند)
+- اینترنت، برای دریافت کتابخانه‌ها در گام ۲
+
+بررسی:
+
+```bash
+git --version && make --version | head -1 && uv --version
+```
+
+### macOS
+
+`git` و `make` با Xcode Command Line Tools می‌آیند:
+
+```bash
+xcode-select --install
+```
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Linux (Ubuntu / Debian)
+
+```bash
+sudo apt update && sudo apt install -y git make curl
+```
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Windows
+
+از WSL2 استفاده کنید. در PowerShell با دسترسی Administrator:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+سیستم را ری‌استارت کنید، برنامه‌ی Ubuntu را باز کنید و دستورهای بخش Linux را داخل آن اجرا کنید. همه‌ی گام‌های بعد هم داخل Ubuntu اجرا می‌شوند.
+
+پس از نصب `uv` ترمینال را ببندید و دوباره باز کنید.
+
+## گام‌ها
+
+### گام ۰ — دریافت این مخزن
+
+آدرس مخزن خودتان را جایگزین کنید:
+
+```bash
+git clone <REPO_URL> ~/mlops-course
+```
+
+مسیر این پوشه را در یک متغیر نگه دارید. اگر ساختار مخزن شما فرق دارد، مسیر را اصلاح کنید:
+
+```bash
+K=~/mlops-course/lab-kit/starter/s01
+```
+
+```bash
+ls $K
+```
+
+باید پنج فایل جدول بالا و همین `README.md` را ببینید.
+
+### گام ۱ — ساخت پروژه
+
+```bash
+mkdir -p ~/work/churn-mlops && cd ~/work/churn-mlops
+```
+
+```bash
+git init -b main
+```
+
+```bash
+uv init --package --name churn --python 3.12
+```
+
+### گام ۲ — نصب کتابخانه‌ها
+
+```bash
+uv add scikit-learn pandas pyyaml
+```
+
+این دستور محیط `.venv` را می‌سازد و نسخه‌ی دقیق کتابخانه‌ها را در `uv.lock` ثبت می‌کند.
+
+### گام ۳ — کپی فایل‌های آماده
+
+```bash
+mkdir -p scripts configs
+cp $K/make_dataset.py scripts/
+cp $K/train.py src/churn/
+cp $K/params.yaml configs/
+cp $K/Makefile .
+cp $K/gitignore .gitignore
+```
+
+### گام ۴ — ساخت داده
+
+```bash
+make data
+```
+
+خروجی مورد انتظار:
+
+```
+wrote 5000 rows to data/raw/churn.csv (churn rate 36.1%)
+```
+
+### گام ۵ — آموزش مدل
+
+```bash
+make train
+```
+
+خروجی مورد انتظار:
+
+```
+{'roc_auc': 0.802, 'f1': 0.5969}
+```
+
+- **ROC-AUC:** توان مدل در جدا کردن مشتری رفته از مشتری مانده. عدد ۰٫۵ یعنی شانسی و ۱ یعنی بی‌نقص.
+- **F1:** ترکیب دقت و پوشش پیش‌بینی‌های «می‌رود».
+
+### گام ۶ — آزمون تکرارپذیری و commit
+
+دوباره اجرا کنید؛ عددها باید دقیقاً همان باشند:
+
+```bash
+make train
+```
+
+اگر Git نام و ایمیل شما را نمی‌شناسد، یک بار تنظیم کنید:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+```
+
+```bash
+git add . && git commit -m "feat: project skeleton + baseline training"
+```
+
+```bash
+git status --short && git log --oneline
+```
+
+`git status` باید خالی باشد و `git log` یک commit نشان دهد.
+
+## بررسی پایان کار
+
+- [ ] `make data` عدد ۵۰۰۰ ردیف و نرخ ریزش ۳۶٫۱٪ را نشان می‌دهد.
+- [ ] `make train` دو بار پشت سر هم همان `roc_auc` و `f1` را می‌دهد.
+- [ ] فایل‌های `models/model.joblib` و `metrics.json` ساخته شده‌اند.
+- [ ] `git status --short` خالی است.
+- [ ] پوشه‌های `data/` و `models/` در commit نیستند.
+
+## ساختار پروژه پس از آزمایشگاه
+
+```
+churn-mlops/
+├── src/churn/train.py
+├── scripts/make_dataset.py
+├── configs/params.yaml
+├── data/raw/churn.csv        (not in Git)
+├── models/model.joblib       (not in Git)
+├── metrics.json              (not in Git)
+├── Makefile
+├── pyproject.toml
+├── uv.lock
+└── README.md
+```
+
+## عیب‌یابی
+
+| نشانه | علت | راه‌حل |
+|---|---|---|
+| `command not found: uv` | ترمینال پس از نصب دوباره باز نشده | ترمینال را ببندید و باز کنید |
+| `command not found: make` | `make` نصب نیست | بخش پیش‌نیازها را ببینید |
+| `Makefile:4: *** missing separator` | خط دستور با فاصله شروع شده، نه با TAB | فایل `Makefile` را دوباره از این پوشه کپی کنید |
+| `ModuleNotFoundError: No module named 'churn'` | `train.py` در جای اشتباه است | باید در `src/churn/train.py` باشد |
+| `FileNotFoundError: data/raw/churn.csv` | داده ساخته نشده | اول `make data` را اجرا کنید |
+| عددها با خروجی مورد انتظار فرق دارند | `params.yaml` یا نسخه‌ی کتابخانه‌ها تغییر کرده | `params.yaml` را دوباره کپی کنید |
+| کندی شدید در Windows | پروژه زیر `/mnt/c` ساخته شده | پروژه را در `~/work` داخل WSL بسازید |
+
+## تمرین
+
+در `train.py` آستانه‌ی تصمیم داخل کد نوشته شده است (`proba > 0.5`).
+
+1. آن را به `configs/params.yaml` ببرید و کد را طوری تغییر دهید که از آن‌جا بخواند.
+2. `make train` را اجرا کنید؛ عددها نباید تغییر کنند.
+3. آستانه را ۰٫۳ کنید. کدام عدد عوض می‌شود و کدام نه؟ چرا؟
