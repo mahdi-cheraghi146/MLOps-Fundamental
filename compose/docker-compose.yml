@@ -1,0 +1,106 @@
+# MLOps Fundamentals On-Prem — lab platform services (runs on each student laptop)
+#   SeaweedFS (S3)  : http://localhost:8333   (master UI http://localhost:9333)
+#   MLflow          : http://localhost:5050
+#   Gitea           : http://localhost:3000   (ssh: localhost:2222)
+#   Gitea runner    : executes CI jobs (session 13)
+# The container registry (localhost:5001) is created with the kind cluster: scripts/kind-up.sh
+#
+# Usage:  cp .env.example .env && docker compose up -d
+name: mlops-lab
+
+services:
+  seaweedfs:
+    image: ${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.45}
+    container_name: seaweedfs
+    command: >
+      server -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0
+      -master.volumeSizeLimitMB=1024 -volume.max=50
+      -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      - "127.0.0.1:8333:8333"   # S3 API
+      - "127.0.0.1:9333:9333"   # master UI
+      - "127.0.0.1:8888:8888"   # filer UI
+    volumes:
+      - seaweedfs-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:9333/cluster/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  mlflow:
+    image: ${MLFLOW_SERVER_IMAGE:-mlops/mlflow-server:3.16.0}
+    build:
+      context: ./mlflow
+      args:
+        MLFLOW_VERSION: "3.16.0"
+        BOTO3_VERSION: "1.43.95"
+    container_name: mlflow
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      MLFLOW_S3_ENDPOINT_URL: http://seaweedfs:8333
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_DEFAULT_REGION: us-east-1
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination s3://mlflow/
+      --serve-artifacts
+      --allowed-hosts localhost,localhost:5050,127.0.0.1,127.0.0.1:5050,mlflow,mlflow:5000
+    ports:
+      - "127.0.0.1:5050:5000"
+    volumes:
+      - mlflow-db:/mlflow
+    restart: unless-stopped
+
+  gitea:
+    image: ${GITEA_IMAGE:-gitea/gitea:1.27.3}
+    container_name: gitea
+    environment:
+      USER_UID: "1000"
+      USER_GID: "1000"
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__server__ROOT_URL: http://localhost:3000/
+      GITEA__server__SSH_PORT: "2222"
+      GITEA__server__OFFLINE_MODE: "true"
+      GITEA__security__INSTALL_LOCK: "true"
+      GITEA__service__DISABLE_REGISTRATION: "true"
+      GITEA__actions__ENABLED: "true"
+      GITEA__actions__DEFAULT_ACTIONS_URL: self   # no calls to github.com (air-gapped)
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:2222:22"
+    volumes:
+      - gitea-data:/data
+    restart: unless-stopped
+
+  gitea-runner:
+    image: ${ACT_RUNNER_IMAGE:-gitea/act_runner:0.6.1}
+    container_name: gitea-runner
+    profiles: ["ci"]              # started in session 13: docker compose --profile ci up -d
+    depends_on: [gitea]
+    environment:
+      CONFIG_FILE: /config.yaml
+      GITEA_INSTANCE_URL: http://gitea:3000
+      GITEA_RUNNER_REGISTRATION_TOKEN: ${RUNNER_TOKEN}
+      GITEA_RUNNER_NAME: laptop-runner
+    volumes:
+      - ./gitea-runner/config.yaml:/config.yaml:ro
+      - gitea-runner-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  seaweedfs-data:
+  mlflow-db:
+  gitea-data:
+  gitea-runner-data:
+
+networks:
+  default:
+    name: mlops-lab

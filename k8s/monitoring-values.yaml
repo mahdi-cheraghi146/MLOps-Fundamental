@@ -1,0 +1,44 @@
+# kube-prometheus-stack trimmed for 16GB laptops (session 13). ~1GB RAM total.
+alertmanager:
+  enabled: false
+nodeExporter:
+  enabled: false
+defaultRules:
+  create: false
+kubeEtcd: {enabled: false}
+kubeScheduler: {enabled: false}
+kubeControllerManager: {enabled: false}
+kubeProxy: {enabled: false}
+prometheusOperator:
+  admissionWebhooks:
+    enabled: false        # avoids the cert-gen job image (offline friendly)
+  tls:
+    enabled: false
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {memory: 256Mi}
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    scrapeInterval: 15s
+    # pick up ServiceMonitors/PodMonitors created by students in any namespace
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests: {cpu: 100m, memory: 300Mi}
+      limits: {memory: 800Mi}
+grafana:
+  adminPassword: mlops-lab   # LAB-ONLY
+  defaultDashboardsEnabled: false
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {memory: 384Mi}
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL   # students ship dashboards as ConfigMaps with label grafana_dashboard=1
+kube-state-metrics:
+  resources:
+    requests: {cpu: 20m, memory: 64Mi}
+    limits: {memory: 192Mi}

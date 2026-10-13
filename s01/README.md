@@ -65,7 +65,17 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 wsl --install -d Ubuntu
 ```
 
-سیستم را ری‌استارت کنید، برنامه‌ی Ubuntu را باز کنید و دستورهای بخش Linux را داخل آن اجرا کنید. همه‌ی گام‌های بعد هم داخل Ubuntu اجرا می‌شوند.
+سیستم را ری‌استارت کنید و برنامه‌ی Ubuntu را از منوی Start باز کنید (یا در PowerShell بنویسید `wsl`).
+
+> **مهم:** از این‌جا به بعد هیچ دستوری را در PowerShell اجرا نکنید. دستورهای بخش Linux و همه‌ی گام‌های بعد فقط داخل پنجره‌ی Ubuntu کار می‌کنند.
+>
+> راه تشخیص: اگر ابتدای خط `PS C:\...>` می‌بینید در PowerShell هستید؛ در Ubuntu چیزی شبیه `name@pc:~$` می‌بینید.
+
+برای اطمینان از نصب بودن Ubuntu، در PowerShell:
+
+```powershell
+wsl -l -v
+```
 
 پس از نصب `uv` ترمینال را ببندید و دوباره باز کنید.
 
@@ -73,16 +83,16 @@ wsl --install -d Ubuntu
 
 ### گام ۰ — دریافت این مخزن
 
-آدرس مخزن خودتان را جایگزین کنید:
-
 ```bash
-git clone <REPO_URL> ~/mlops-course
+git clone https://github.com/srsalari/MLOps-Fundamental.git ~/mlops-lab
 ```
 
-مسیر این پوشه را در یک متغیر نگه دارید. اگر ساختار مخزن شما فرق دارد، مسیر را اصلاح کنید:
+اگر قبلاً clone کرده‌اید، فقط آن را به‌روز کنید: `git -C ~/mlops-lab pull`
+
+مسیر این پوشه را در یک متغیر نگه دارید:
 
 ```bash
-K=~/mlops-course/lab-kit/starter/s01
+K=~/mlops-lab/s01
 ```
 
 ```bash
@@ -204,6 +214,7 @@ churn-mlops/
 
 | نشانه | علت | راه‌حل |
 |---|---|---|
+| `The token '&&' is not a valid statement separator` | دستور Linux در PowerShell اجرا شده | پنجره‌ی Ubuntu را باز کنید (`wsl`) و دستور را آن‌جا اجرا کنید |
 | `command not found: uv` | ترمینال پس از نصب دوباره باز نشده | ترمینال را ببندید و باز کنید |
 | `command not found: make` | `make` نصب نیست | بخش پیش‌نیازها را ببینید |
 | `Makefile:4: *** missing separator` | خط دستور با فاصله شروع شده، نه با TAB | فایل `Makefile` را دوباره از این پوشه کپی کنید |

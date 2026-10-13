@@ -1,0 +1,11 @@
+{
+  "identities": [
+    {
+      "name": "mlops-lab",
+      "credentials": [
+        { "accessKey": "mlops-lab-key", "secretKey": "mlops-lab-secret-change-me" }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# act_runner config for the classroom (offline-friendly)
+log:
+  level: info
+runner:
+  file: .runner
+  capacity: 1
+  timeout: 30m
+  labels:
+    # Jobs that say "runs-on: ubuntu-latest" run inside the pre-built course CI image
+    - "ubuntu-latest:docker://mlops/ci-job:1.0"
+container:
+  network: mlops-lab          # job containers can reach http://gitea:3000, http://mlflow:5000, http://seaweedfs:8333
+  force_pull: false           # use the locally loaded image (no internet)
+  privileged: false
+  valid_volumes:
+    - /var/run/docker.sock
+  options: "-v /var/run/docker.sock:/var/run/docker.sock"

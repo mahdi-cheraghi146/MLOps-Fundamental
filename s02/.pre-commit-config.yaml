@@ -1,0 +1,31 @@
+# Offline-friendly: every hook is local (nothing is downloaded from the internet)
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff (lint)
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff (format)
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      - id: no-env-files
+        name: block .env files
+        entry: ".env files must never be committed"
+        language: fail
+        files: '(^|/)\.env$'
+      - id: no-secrets
+        name: block hard-coded secrets
+        entry: '(?i)(secret|password|token|access_key)\w*\s*[=:]\s*["'']?[A-Za-z0-9/+_-]{12,}'
+        language: pygrep
+        types: [text]
+        exclude: '^(uv\.lock|\.pre-commit-config\.yaml)$'
+      - id: pytest
+        name: pytest (unit tests)
+        entry: uv run pytest -q
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

@@ -1,0 +1,21 @@
+# Top-level Python dependencies for the course repo (Python 3.12).
+# The offline bundle builder compiles a per-platform lock file and wheelhouse from this.
+scikit-learn==1.9.1
+pandas==3.0.5
+numpy==2.5.3
+pyyaml==6.0.3
+dvc[s3]==3.67.1
+mlflow==3.16.0
+boto3==1.43.95
+awscli==1.46.1
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+pydantic==2.13.5
+prometheus-fastapi-instrumentator==8.1.0
+evidently==0.7.23
+pytest==9.1.1
+httpx==0.28.1
+ruff==0.16.7
+pre-commit==4.6.2
+ansible-core==2.21.4
+uv-build==0.12.15

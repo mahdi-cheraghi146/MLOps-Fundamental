@@ -1,0 +1,23 @@
+# Traefik ingress controller for kind (session 12). Replaces the retired ingress-nginx.
+deployment:
+  replicas: 1
+service:
+  type: NodePort
+ports:
+  web:
+    nodePort: 30080
+  websecure:
+    nodePort: 30443
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+providers:
+  kubernetesIngress:
+    enabled: true
+  kubernetesGateway:
+    enabled: false        # Gateway API is shown as a preview only
+nodeSelector:
+  ingress-ready: "true"
+resources:
+  requests: {cpu: 50m, memory: 64Mi}
+  limits: {memory: 256Mi}
