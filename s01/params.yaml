@@ -5,3 +5,5 @@ data:
 train:
   C: 1.0
   max_iter: 500
+eval:
+  threshold: 0.5

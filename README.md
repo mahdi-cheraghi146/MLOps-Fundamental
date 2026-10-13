@@ -26,7 +26,7 @@ git -C ~/mlops-lab pull
 |---|---|
 | `s01/`، `s02/`، … | فایل‌های آماده و راهنمای آزمایشگاه هر جلسه |
 | `compose/` | سرویس‌های آزمایشگاه با Docker Compose: Gitea (و runner آن)، SeaweedFS، MLflow |
-| `scripts/` | `preflight.sh` (بررسی آمادگی لپ‌تاپ)، `kind-up.sh`، `install-from-bundle.sh` |
+| `scripts/` | `verify.sh` (بررسی پایان کار هر جلسه)، `preflight.sh` (بررسی آمادگی لپ‌تاپ برای کل دوره)، `kind-up.sh`، `install-from-bundle.sh` |
 | `k8s/` | تنظیمات Kubernetes (kind، Traefik، monitoring) برای جلسه‌های ۱۱ تا ۱۳ |
 | `versions.env`، `requirements.txt` | نسخه‌ی دقیق ابزارها و کتابخانه‌های دوره |
 
@@ -39,7 +39,7 @@ git -C ~/mlops-lab pull
 | جلسه | موضوع | پوشه |
 |---|---|---|
 | ۱ | شروع دوره و مبانی MLOps؛ اولین مدل Churn | [`s01/`](s01/README.md) |
-| ۲ | Git برای ML و کیفیت کد | [`s02/`](s02/README.md) |
+| ۲ | Git برای ML و کیفیت کد | [`s02/`](s02/README.md) · [آماده‌سازی](s02/SETUP.md) |
 | ۳ | مبانی Docker و ذخیره‌ساز شیء (SeaweedFS) | بعداً اضافه می‌شود |
 | ۴ | نسخه‌بندی داده با DVC | بعداً اضافه می‌شود |
 | ۵ تا ۱۴ | طبق طرح درس | بعداً اضافه می‌شود |
