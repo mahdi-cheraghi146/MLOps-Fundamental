@@ -29,7 +29,6 @@ git -C ~/mlops-lab pull
 | `scripts/` | `preflight.sh` (بررسی آمادگی لپ‌تاپ)، `kind-up.sh`، `install-from-bundle.sh` |
 | `k8s/` | تنظیمات Kubernetes (kind، Traefik، monitoring) برای جلسه‌های ۱۱ تا ۱۳ |
 | `versions.env`، `requirements.txt` | نسخه‌ی دقیق ابزارها و کتابخانه‌های دوره |
-| `docs/` | طرح درس، واژه‌نامه و اسلایدهای جلسه‌های برگزارشده |
 
 ## پروژه‌ی شما کجاست؟
 
@@ -44,12 +43,6 @@ git -C ~/mlops-lab pull
 | ۳ | مبانی Docker و ذخیره‌ساز شیء (SeaweedFS) | بعداً اضافه می‌شود |
 | ۴ | نسخه‌بندی داده با DVC | بعداً اضافه می‌شود |
 | ۵ تا ۱۴ | طبق طرح درس | بعداً اضافه می‌شود |
-
-## منابع
-
-- [طرح درس](docs/Teaching-Plan-MLOps-Fundamentals-FA.pdf)
-- [واژه‌نامه‌ی MLOps](docs/Glossary-MLOps-FA.pdf)
-- [اسلایدهای جلسه‌ی ۱](docs/slides/Session-01-Kickoff-MLOps-Foundations.pdf)
 
 ## درباره‌ی کلیدهای داخل `compose/`
 
