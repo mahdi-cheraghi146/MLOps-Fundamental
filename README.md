@@ -28,6 +28,7 @@ git -C ~/mlops-lab pull
 | `compose/` | سرویس‌های آزمایشگاه با Docker Compose: Gitea (و runner آن)، SeaweedFS، MLflow |
 | `scripts/` | `verify.sh` (بررسی پایان کار هر جلسه)، `preflight.sh` (بررسی آمادگی لپ‌تاپ برای کل دوره)، `kind-up.sh`، `install-from-bundle.sh` |
 | `k8s/` | تنظیمات Kubernetes (kind، Traefik، monitoring) برای جلسه‌های ۱۱ تا ۱۳ |
+| `compose/README.md` | راهنمای فارسی [سرویس‌های آزمایشگاه](compose/README.md) و فایل‌های تنظیم آن‌ها |
 | `versions.env`، `requirements.txt` | نسخه‌ی دقیق ابزارها و کتابخانه‌های دوره |
 
 ## پروژه‌ی شما کجاست؟
@@ -40,8 +41,8 @@ git -C ~/mlops-lab pull
 |---|---|---|
 | ۱ | شروع دوره و مبانی MLOps؛ اولین مدل Churn | [`s01/`](s01/README.md) |
 | ۲ | Git برای ML و کیفیت کد | [`s02/`](s02/README.md) · [آماده‌سازی](s02/SETUP.md) |
-| ۳ | مبانی Docker و ذخیره‌ساز شیء (SeaweedFS) | بعداً اضافه می‌شود |
-| ۴ | نسخه‌بندی داده با DVC | بعداً اضافه می‌شود |
+| ۳ | مبانی Docker و ذخیره‌ساز شیء (SeaweedFS) | [`s03/`](s03/README.md) · [تکلیف](s03/HOMEWORK.md) |
+| ۴ | نسخه‌بندی داده با DVC | [`s04/`](s04/README.md) · [تکلیف](s04/HOMEWORK.md) |
 | ۵ تا ۱۴ | طبق طرح درس | بعداً اضافه می‌شود |
 
 ## درباره‌ی کلیدهای داخل `compose/`

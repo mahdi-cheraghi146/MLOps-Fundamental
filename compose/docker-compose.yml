@@ -6,46 +6,87 @@
 # The container registry (localhost:5001) is created with the kind cluster: scripts/kind-up.sh
 #
 # Usage:  cp .env.example .env && docker compose up -d
+#
+# WARNING: never run "docker compose down -v" in class. The -v flag deletes the named volumes
+# at the bottom of this file, and with them all Gitea repos and all MLflow runs/models.
+# Plain "docker compose down" (without -v) keeps the data.
+
+# Fixed project name, so the network and volume names do not depend on the folder name.
 name: mlops-lab
 
 services:
+  # ---- SeaweedFS: S3-compatible object storage (used in sessions 3-7) --------------------
+  # Holds DVC data (bucket "dvc", sessions 4-5) and MLflow artifacts (bucket "mlflow", 6-8).
   seaweedfs:
+    # Image tag can be overridden from .env / versions.env; the default is the pinned version.
     image: ${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.45}
     container_name: seaweedfs
+    # "server" runs master + volume + filer + S3 gateway in ONE process (simplest for a laptop).
+    # -dir=/data              : where files are stored (the seaweedfs-data volume)
+    # -ip=seaweedfs           : name other containers use to reach it (the compose service name)
+    # -ip.bind=0.0.0.0        : listen on all interfaces inside the container
+    # -master.volumeSizeLimitMB=1024 -volume.max=50 : small volumes, so a laptop disk is not
+    #                           reserved up front
+    # -s3 -s3.port=8333       : start the S3 API on port 8333
+    # -s3.config=...          : identities (access key / secret key) come from s3.json
     command: >
       server -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0
       -master.volumeSizeLimitMB=1024 -volume.max=50
       -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    # All ports are bound to 127.0.0.1 only: nobody else on the classroom network can reach them.
     ports:
       - "127.0.0.1:8333:8333"   # S3 API
       - "127.0.0.1:9333:9333"   # master UI
       - "127.0.0.1:8888:8888"   # filer UI
     volumes:
+      # Named volume: the stored objects survive container restarts.
       - seaweedfs-data:/data
+      # The S3 users file from this repo, mounted read-only (:ro).
       - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    # Marks the container "healthy" when the master answers. MLflow waits for this.
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:9333/cluster/status || exit 1"]
+      # check every 10 seconds
       interval: 10s
+      # one check may take at most 5 seconds
       timeout: 5s
+      # up to 12 failures (about 2 minutes) before it is called unhealthy
       retries: 12
+    # Start again after a reboot, unless the student stopped it on purpose.
     restart: unless-stopped
 
+  # ---- MLflow tracking server + model registry (used in sessions 6-8) --------------------
   mlflow:
     image: ${MLFLOW_SERVER_IMAGE:-mlops/mlflow-server:3.16.0}
+    # Built locally from ./mlflow/Dockerfile (see that file), so no external image is needed.
     build:
       context: ./mlflow
       args:
+        # must match mlflow in requirements.txt
         MLFLOW_VERSION: "3.16.0"
+        # S3 client library used for the artifact store
         BOTO3_VERSION: "1.43.95"
     container_name: mlflow
+    # Start only after SeaweedFS is healthy, because MLflow writes artifacts to it.
     depends_on:
       seaweedfs:
         condition: service_healthy
     environment:
+      # boto3 reads these four variables to talk to SeaweedFS instead of AWS.
+      # S3 address inside the compose network
       MLFLOW_S3_ENDPOINT_URL: http://seaweedfs:8333
+      # from .env, must match s3.json
       AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      # from .env, must match s3.json
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      # boto3 needs some region; value is unused
       AWS_DEFAULT_REGION: us-east-1
+    # --backend-store-uri     : runs, params and metrics live in a SQLite file (simple, one user)
+    # --artifacts-destination : model files and plots go to the "mlflow" bucket in SeaweedFS
+    # --serve-artifacts       : the server proxies artifact upload/download, so student laptops
+    #                           only need http://localhost:5050 and never need S3 keys
+    # --allowed-hosts         : MLflow 3.x rejects requests whose Host header is not listed here
+    #                           (students use localhost:5050, other containers use mlflow:5000)
     command: >
       mlflow server --host 0.0.0.0 --port 5000
       --backend-store-uri sqlite:////mlflow/mlflow.db
@@ -53,54 +94,84 @@ services:
       --serve-artifacts
       --allowed-hosts localhost,localhost:5050,127.0.0.1,127.0.0.1:5050,mlflow,mlflow:5000
     ports:
+      # Host port 5050 (5000 is often used by macOS AirPlay) -> container port 5000.
       - "127.0.0.1:5050:5000"
     volumes:
+      # Keeps mlflow.db (all runs and registered models) across restarts.
       - mlflow-db:/mlflow
     restart: unless-stopped
 
+  # ---- Gitea: local Git server + CI (used from session 2) --------------------------------
   gitea:
     image: ${GITEA_IMAGE:-gitea/gitea:1.27.3}
     container_name: gitea
+    # Gitea reads settings from environment variables named GITEA__<section>__<KEY>.
     environment:
+      # user id/group id the Gitea process runs as inside the container
       USER_UID: "1000"
       USER_GID: "1000"
+      # no separate database container needed
       GITEA__database__DB_TYPE: sqlite3
+      # URL used in clone links and web pages
       GITEA__server__ROOT_URL: http://localhost:3000/
+      # shown in SSH clone URLs
       GITEA__server__SSH_PORT: "2222"
+      # do not load assets from the internet
       GITEA__server__OFFLINE_MODE: "true"
+      # skip the first-run install wizard
       GITEA__security__INSTALL_LOCK: "true"
+      # users are created by the instructor
       GITEA__service__DISABLE_REGISTRATION: "true"
+      # turn on Gitea Actions (CI, session 13)
       GITEA__actions__ENABLED: "true"
       GITEA__actions__DEFAULT_ACTIONS_URL: self   # no calls to github.com (air-gapped)
     ports:
+      # web UI and HTTP Git
       - "127.0.0.1:3000:3000"
+      # SSH Git (host 2222 -> container 22, avoids the laptop's own SSH)
       - "127.0.0.1:2222:22"
     volumes:
+      # Repositories, users and the SQLite database. Losing this volume loses everything.
       - gitea-data:/data
     restart: unless-stopped
 
+  # ---- Gitea Actions runner: runs CI jobs (session 13) -----------------------------------
   gitea-runner:
     image: ${ACT_RUNNER_IMAGE:-gitea/act_runner:0.6.1}
     container_name: gitea-runner
     profiles: ["ci"]              # started in session 13: docker compose --profile ci up -d
     depends_on: [gitea]
     environment:
+      # runner settings (see gitea-runner/config.yaml)
       CONFIG_FILE: /config.yaml
+      # where to register (compose service name)
       GITEA_INSTANCE_URL: http://gitea:3000
+      # created in the Gitea UI, put in .env
       GITEA_RUNNER_REGISTRATION_TOKEN: ${RUNNER_TOKEN}
+      # name shown in Gitea > Runners
       GITEA_RUNNER_NAME: laptop-runner
     volumes:
       - ./gitea-runner/config.yaml:/config.yaml:ro
+      # remembers the registration, so it is not repeated
       - gitea-runner-data:/data
+      # Lets the runner start job containers through the laptop's Docker daemon.
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
+# Named volumes: Docker keeps them outside the containers. They survive "docker compose down"
+# but are DELETED by "docker compose down -v".
 volumes:
+  # S3 objects: DVC data and MLflow artifacts
   seaweedfs-data:
+  # MLflow SQLite database
   mlflow-db:
+  # Gitea repositories and database
   gitea-data:
+  # runner registration state
   gitea-runner-data:
 
+# One shared network with a fixed name, so the runner job containers (container.network
+# in gitea-runner/config.yaml) can join it as "mlops-lab".
 networks:
   default:
     name: mlops-lab

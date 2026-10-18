@@ -22,6 +22,8 @@
 | `Makefile` | ریشه‌ی پروژه | دستورهای کوتاه `make data` و `make train` |
 | `gitignore` | ریشه‌ی پروژه، با نام `.gitignore` | فایل‌هایی که نباید در Git بروند |
 
+توضیح خط‌به‌خط کد این جلسه به فارسی: [CODE.md](CODE.md) (در VS Code با Ctrl+Shift+V یا در GitHub باز کنید).
+
 ## پیش‌نیازها
 
 - `git`

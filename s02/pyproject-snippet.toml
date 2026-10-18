@@ -1,12 +1,25 @@
 # Append these blocks to the end of your pyproject.toml (Lab 2, step 2)
+# How: `cat ... >> pyproject.toml`. pyproject.toml is the central settings file of a Python
+# project; the tools (ruff and pytest) read their settings from it.
 
+# Main ruff settings (ruff is both the linter and the formatter).
 [tool.ruff]
+# Maximum line length is 100 characters (rule E501 and `ruff format` both use this number).
 line-length = 100
+# Folders that contain our own code. ruff uses this list to know which imports are
+# first-party (ours) and sorts them separately from external libraries.
 src = ["src", "scripts", "tests"]
 
+# Settings of the lint part (error checking) of ruff.
 [tool.ruff.lint]
+# Enabled rule groups: E (pycodestyle style, e.g. line length), F (pyflakes errors, e.g.
+# unused import), I (sorted imports), B (flake8-bugbear suspicious patterns), UP (old Python
+# syntax that should be modernized).
 select = ["E", "F", "I", "B", "UP"]
 
+# pytest settings.
 [tool.pytest.ini_options]
+# pytest looks for `test_*.py` files only in the tests folder.
 testpaths = ["tests"]
+# The scripts folder is added to the import path so tests can do `from make_dataset import make`.
 pythonpath = ["scripts"]

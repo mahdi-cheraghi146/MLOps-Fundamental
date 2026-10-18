@@ -1,28 +1,47 @@
+# This file defines the hooks: small programs that pre-commit runs automatically before
+# `git commit` (and, for pytest, before `git push`). If one fails, the commit is not made.
 # Offline-friendly: every hook is local (nothing is downloaded from the internet)
+# Normally hooks are downloaded from internet repositories; here all of them are `repo: local`,
+# so they use tools we already installed with uv and no internet is needed.
 repos:
   - repo: local
     hooks:
+      # Hook 1: code quality check with ruff. `--fix` repairs simple problems (such as an
+      # unused import) by itself; then the commit is rejected so you can `git add` the fixed file.
+      # `language: system` means run the command directly from the system / uv environment
+      # (no separate install). `types: [python]` means run only on staged Python files.
       - id: ruff-check
         name: ruff (lint)
         entry: uv run ruff check --fix
         language: system
         types: [python]
+      # Hook 2: consistent code formatting (spaces, quotes, line length) with ruff format.
       - id: ruff-format
         name: ruff (format)
         entry: uv run ruff format
         language: system
         types: [python]
+      # Hook 3: stop the `.env` file (it holds keys and passwords) from being committed.
+      # `language: fail` always fails and `entry` is the message it prints; so any file that
+      # matches the `files` pattern (any file named `.env`) makes the commit be rejected.
       - id: no-env-files
         name: block .env files
         entry: ".env files must never be committed"
         language: fail
         files: '(^|/)\.env$'
+      # Hook 4: find keys/passwords written directly in the code. `language: pygrep` means
+      # entry is a Python regex; if it matches in any text file, the hook fails.
+      # The regex looks for a name like secret, password, token or access_key followed by `=`
+      # or `:` and a value of at least 12 characters. `(?i)` means upper/lower case is ignored.
+      # The file `uv.lock` (long hashes) and this file itself are excluded from the check.
       - id: no-secrets
         name: block hard-coded secrets
         entry: '(?i)(secret|password|token|access_key)\w*\s*[=:]\s*["'']?[A-Za-z0-9/+_-]{12,}'
         language: pygrep
         types: [text]
         exclude: '^(uv\.lock|\.pre-commit-config\.yaml)$'
+      # Hook 5: run the tests, but only at the `pre-push` stage (not on every commit) because
+      # it is slower. `pass_filenames: false` means do not pass file names to pytest; run all tests.
       - id: pytest
         name: pytest (unit tests)
         entry: uv run pytest -q

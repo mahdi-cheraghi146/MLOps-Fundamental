@@ -1,9 +1,14 @@
-# act_runner config for the classroom (offline-friendly)
+# act_runner config for the classroom (offline-friendly). Used in session 13.
+# Mounted into the gitea-runner container as /config.yaml (see compose/docker-compose.yml).
 log:
+  # use "debug" when a CI job fails and you need more detail
   level: info
 runner:
+  # where the registration result is stored (inside the /data volume)
   file: .runner
+  # run one job at a time, to protect a 16GB laptop
   capacity: 1
+  # kill a job that runs longer than 30 minutes
   timeout: 30m
   labels:
     # Jobs that say "runs-on: ubuntu-latest" run inside the pre-built course CI image
@@ -11,7 +16,11 @@ runner:
 container:
   network: mlops-lab          # job containers can reach http://gitea:3000, http://mlflow:5000, http://seaweedfs:8333
   force_pull: false           # use the locally loaded image (no internet)
+  # job containers get no extra Linux privileges (safer)
   privileged: false
+  # Only these host paths may be mounted into job containers.
   valid_volumes:
     - /var/run/docker.sock
+  # Extra "docker run" options for every job container: lets a job build images
+  # through the laptop's Docker daemon.
   options: "-v /var/run/docker.sock:/var/run/docker.sock"

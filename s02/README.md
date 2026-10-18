@@ -44,6 +44,8 @@ K=~/mlops-lab/s02
 | `test_train.py` | `tests/` | یک آزمون برای مدل؛ آزمون چهارم را خودتان می‌نویسید |
 | `.pre-commit-config.yaml` | ریشه‌ی پروژه | hookهای آفلاین (با `ls -a` دیده می‌شود) |
 
+توضیح خط‌به‌خط کد این جلسه به فارسی: [CODE.md](CODE.md) (در VS Code با Ctrl+Shift+V یا در GitHub باز کنید).
+
 در اسلایدها مسیر فایل‌های آماده `~/mlops-lab/starter/s02` نوشته شده است؛ در این مخزن همان فایل‌ها در `~/mlops-lab/s02` هستند.
 
 ---
@@ -51,6 +53,20 @@ K=~/mlops-lab/s02
 ## گام ۰ — تکلیف جلسه‌ی ۱ روی یک شاخه (۱۰ دقیقه)
 
 اگر تکلیف را قبلاً انجام داده و commit کرده‌اید، به گام ۱ بروید.
+
+> **اول این را بررسی کنید.** فایل‌های پوشه‌ی `s01` مخزن دوره بلوک `eval` را از قبل دارند. اگر پروژه‌تان را با کپی همان فایل‌ها ساخته‌اید، تغییری برای این گام نمی‌ماند و اضافه کردن دوباره‌ی `eval:` فایل YAML را خراب می‌کند (کلید تکراری).
+>
+> ```bash
+> grep -n "eval" configs/params.yaml
+> ```
+>
+> اگر خروجی خط `eval:` را نشان داد:
+>
+> 1. گام ۰ را کامل رد کنید. فقط مطمئن شوید همه‌چیز روی `main` commit شده است (خروجی `git status --short` خالی باشد).
+> 2. در گام ۱ دستور push شاخه‌ی `feature/eval-threshold` را اجرا نکنید؛ همان push شاخه‌ی `main` کافی است.
+> 3. در گام ۲ بخش Pull Request را رد کنید و فقط tag را بزنید. اولین Pull Request خود را در گام ۶ می‌سازید.
+>
+> اگر خروجی خالی بود، گام ۰ را مثل زیر انجام دهید.
 
 ```bash
 git switch -c feature/eval-threshold
@@ -171,7 +187,7 @@ git switch -c feature/quality-gates
 ```
 
 ```bash
-uv add --dev ruff pytest pre-commit
+cd ~/work/churn-mlops && uv add --dev ruff pytest pre-commit
 ```
 
 ```bash
@@ -237,7 +253,7 @@ git add . && git commit -m "test: add data and model unit tests"
 ## گام ۵ — pre-commit و دو آزمایش (۱۰ دقیقه)
 
 ```bash
-cp $K/.pre-commit-config.yaml .
+cd ~/work/churn-mlops && cp $K/.pre-commit-config.yaml .
 ```
 
 ```bash
@@ -336,6 +352,8 @@ s02: 5/5 checks passed
 | push «گیر کرده» | منتظر رمز است، یا Ctrl+Z زده‌اید | رمز را تایپ کنید و Enter؛ برای لغو Ctrl+C (نه Ctrl+Z) |
 | `src refspec ... does not match any` | شاخه‌ای با این نام روی لپ‌تاپ نیست | `git branch` را ببینید؛ شاخه را بسازید و commit کنید |
 | `port is already allocated` برای ۳۰۰۰ | برنامه‌ی دیگری روی این پورت است | آن برنامه را ببندید |
+| `error: No pyproject.toml found in current directory` | دستور در پوشه‌ی دوره (`~/mlops-lab/s02`) اجرا شده، نه در پروژه | اول `cd ~/work/churn-mlops`؛ اگر در `~/mlops-lab/s02` فایل `pyproject.toml` ساخته شد، آن را با `uv.lock` و `.venv` پاک کنید |
+| `Failed to spawn: pre-commit` | `pre-commit` در این پوشه نصب نیست (پوشه‌ی اشتباه یا گام ۴ انجام نشده) | در `~/work/churn-mlops` اول `uv add --dev ruff pytest pre-commit` و بعد `install` |
 | `No .pre-commit-config.yaml file was found` | روی شاخه‌ای هستید که این فایل را ندارد؛ hookها روی همه‌ی شاخه‌ها فعال‌اند | `git merge main` در آن شاخه |
 | ruff فایل را عوض کرد و commit رد شد | طبیعی است؛ ruff اصلاح کرده | دوباره `git add` و `git commit` |
 | `paths are ignored: .env` | `.env` در gitignore است | برای آزمایش: `git add -f .env` |
